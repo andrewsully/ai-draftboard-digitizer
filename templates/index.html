@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantasy Football Draft Board OCR</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏈 Fantasy Football Draft Board OCR</h1>
+            <p>Upload your draft board image, crop it, calibrate colors, and get instant results!</p>
+        </header>
+
+        <!-- Step 1: Image Upload -->
+        <div class="step" id="step1">
+            <h2>Step 1: Upload Your Draft Board</h2>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-content">
+                    <div class="upload-icon">📷</div>
+                    <p>Drag & drop your draft board image here</p>
+                    <p>or</p>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Choose File
+                    </button>
+                </div>
+            </div>
+            <div id="uploadStatus" class="status"></div>
+        </div>
+
+        <!-- Step 2: Draft Configuration -->
+        <div class="step" id="step2" style="display: none;">
+            <h2>Step 2: Configure Draft Settings</h2>
+            <div class="draft-config">
+                <div class="config-form">
+                    <div class="config-row">
+                        <div class="config-item">
+                            <label for="teamCount">Number of Teams:</label>
+                            <input type="number" id="teamCount" value="10" min="1" max="20">
+                        </div>
+                        <div class="config-item">
+                            <label for="roundCount">Number of Rounds:</label>
+                            <input type="number" id="roundCount" value="16" min="1" max="20">
+                        </div>
+                        <div class="config-item" style="flex: 1; min-width: 240px;">
+                            <label for="teamNameQuick">Team Names:</label>
+                            <input type="text" id="teamNameQuick" placeholder="Team 1" autocomplete="off">
+                            <small id="teamNameQuickHelp">Type a name and press Enter to save, then it advances to the next team.</small>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="config-preview">
+                    <img id="configPreviewImage" alt="Uploaded draft board preview">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="nextStep()">Continue to Crop</button>
+        </div>
+
+        <!-- Step 3: Image Cropping -->
+        <div class="step" id="step3" style="display: none;">
+            <h2>Step 3: Crop Your Board</h2>
+            
+            <!-- Crop Mode Toggle -->
+            <div class="crop-mode-toggle">
+                <button class="btn btn-secondary active" onclick="switchCropMode('simple')" id="simpleCropBtn">Simple Crop</button>
+                <button class="btn btn-secondary" onclick="switchCropMode('advanced')" id="advancedCropBtn">Advanced Crop (4 Corners)</button>
+            </div>
+            
+            <!-- Simple Crop Mode -->
+            <div class="crop-container" id="simpleCropContainer">
+                <div class="crop-area">
+                    <img id="cropImage" src="" alt="Uploaded image">
+                    <div id="cropOverlay" class="crop-overlay">
+                        <div id="cropBox" class="crop-box"></div>
+                    </div>
+                </div>
+                <div class="crop-controls">
+                    <p>Drag the corners to adjust the crop area</p>
+                    <button class="btn btn-primary" onclick="performCrop()">Crop Image</button>
+                </div>
+            </div>
+            
+            <!-- Advanced Crop Mode -->
+            <div class="crop-container" id="advancedCropContainer" style="display: none;">
+                <div class="crop-area">
+                    <div class="zoom-container" id="zoomContainer">
+                        <img id="advancedCropImage" src="" alt="Uploaded image">
+                        <div id="advancedCropOverlay" class="advanced-crop-overlay">
+                            <!-- Corner markers will be added dynamically -->
+                        </div>
+                    </div>
+                    <div class="zoom-controls">
+                        <button class="btn btn-small zoom-btn" onclick="zoomIn()" title="Zoom In">🔍+</button>
+                        <button class="btn btn-small zoom-btn" onclick="zoomOut()" title="Zoom Out">🔍-</button>
+                        <button class="btn btn-small zoom-btn" onclick="resetZoom()" title="Reset Zoom">⌂</button>
+                        <span class="zoom-level" id="zoomLevel">100%</span>
+                    </div>
+                </div>
+                <div class="crop-controls">
+                    <div class="corner-instructions">
+                        <p id="cornerInstruction">Click on the <strong>top-left</strong> corner of your draft board</p>
+                        <div class="corner-progress">
+                            <span id="corner1" class="corner-marker">1</span>
+                            <span id="corner2" class="corner-marker">2</span>
+                            <span id="corner3" class="corner-marker">3</span>
+                            <span id="corner4" class="corner-marker">4</span>
+                        </div>
+                    </div>
+                    <div class="zoom-instructions">
+                        <p><strong>Zoom Tips:</strong></p>
+                        <p>• Use zoom controls or mouse wheel to zoom</p>
+                        <p>• Drag to pan when zoomed in</p>
+                        <p>• Place corners precisely at board edges</p>
+                    </div>
+                    <button class="btn btn-secondary" onclick="resetCorners()">Reset Corners</button>
+                    <button class="btn btn-primary" onclick="performAdvancedCrop()" id="applyPerspectiveBtn" disabled>Apply Perspective Correction</button>
+                </div>
+            </div>
+            
+            <div id="cropStatus" class="status"></div>
+        </div>
+
+        <!-- Step 4: Color Calibration -->
+        <div class="step" id="step4" style="display: none;">
+            <h2>Step 4: Calibrate Position Colors</h2>
+            <div class="calibration-container">
+                <div class="image-preview">
+                    <img id="croppedPreview" src="" alt="Cropped board">
+                    <div class="color-picker-overlay">
+                        <div class="picker-instructions">
+                            <p><strong>Color Picker Instructions:</strong></p>
+                            <p>1. Click "Pick Color" for each position</p>
+                            <p>2. Click on a sticker of that position in the image</p>
+                            <p>3. Repeat for all 6 positions (QB, RB, WR, TE, K, DST)</p>
+                            <p>4. Click "Complete Calibration" when done</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="color-controls">
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px;">
+                        <button class="btn btn-blue" onclick="autoDetectColors()" id="autoDetectBtn">
+                            Detect Colors Automatically
+                        </button>
+                    </div>
+                    <div class="position-colors">
+                        <div class="color-item" data-position="QB" id="colorItemQB">
+                            <div class="color-preview" id="qbColor"></div>
+                            <span>QB (Quarterback)</span>
+                            <button class="btn btn-small" onclick="pickColor('QB')" id="btnQB">Pick Color</button>
+                        </div>
+                        <div class="color-item" data-position="RB" id="colorItemRB">
+                            <div class="color-preview" id="rbColor"></div>
+                            <span>RB (Running Back)</span>
+                            <button class="btn btn-small" onclick="pickColor('RB')" id="btnRB">Pick Color</button>
+                        </div>
+                        <div class="color-item" data-position="WR" id="colorItemWR">
+                            <div class="color-preview" id="wrColor"></div>
+                            <span>WR (Wide Receiver)</span>
+                            <button class="btn btn-small" onclick="pickColor('WR')" id="btnWR">Pick Color</button>
+                        </div>
+                        <div class="color-item" data-position="TE" id="colorItemTE">
+                            <div class="color-preview" id="teColor"></div>
+                            <span>TE (Tight End)</span>
+                            <button class="btn btn-small" onclick="pickColor('TE')" id="btnTE">Pick Color</button>
+                        </div>
+                        <div class="color-item" data-position="K" id="colorItemK">
+                            <div class="color-preview" id="kColor"></div>
+                            <span>K (Kicker)</span>
+                            <button class="btn btn-small" onclick="pickColor('K')" id="btnK">Pick Color</button>
+                        </div>
+                        <div class="color-item" data-position="DST" id="colorItemDST">
+                            <div class="color-preview" id="dstColor"></div>
+                            <span>DST (Defense)</span>
+                            <button class="btn btn-small" onclick="pickColor('DST')" id="btnDST">Pick Color</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <button class="btn btn-primary" onclick="calibrateColors()" id="calibrateBtn" disabled>
+                            Complete Calibration
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="calibrationStatus" class="status"></div>
+        </div>
+
+        <!-- Step 5: Processing -->
+        <div class="step" id="step5" style="display: none;">
+            <h2>Step 5: Process Your Board</h2>
+            <div class="processing-container">
+                <div class="processing-info">
+                    <p>Ready to process your draft board with the calibrated colors!</p>
+                    <button class="btn btn-primary" onclick="processBoard()">Process Board</button>
+                </div>
+            </div>
+            <div id="processingStatus" class="status"></div>
+        </div>
+
+        <!-- Step 6: Results -->
+        <div class="step" id="step6" style="display: none;">
+            <h2>Step 6: Results</h2>
+            <div class="results-container">
+                <div class="results-summary" id="resultsSummary"></div>
+                
+                <!-- View Toggle -->
+                <div class="view-toggle">
+                    <button class="btn btn-primary active" onclick="switchView('bigboard')" id="bigboardBtn">Big Board</button>
+                    <button class="btn btn-secondary" onclick="switchView('rosters')" id="rostersBtn">Team Rosters</button>
+                    <button class="btn btn-secondary" onclick="switchView('debug')" id="debugBtn">Debug View</button>
+                </div>
+                
+                <!-- Big Board View -->
+                <div class="results-table" id="bigboardView">
+                    <table id="resultsTable">
+                        <thead>
+                            <tr>
+                                <th>Pick #</th>
+                                <th>Player</th>
+                                <th>Position</th>
+                                <th>Team</th>
+                                <th>Bye</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody"></tbody>
+                    </table>
+                </div>
+                
+                <!-- Team Rosters View -->
+                <div class="results-table" id="rostersView" style="display: none;">
+                    <div class="team-rosters" id="teamRosters"></div>
+                </div>
+                
+                <!-- Debug View -->
+                <div class="results-table" id="debugView" style="display: none;">
+                    <div class="debug-container">
+                        <div class="debug-overlay">
+                            <img id="debugOverlayImage" src="" alt="Debug overlay">
+                        </div>
+                        <div class="debug-info-panel" id="debugInfoPanel">
+                            <h3>Hover over a cell to see detailed breakdown</h3>
+                            <p style="color:#4a5568; font-size: 0.95rem;">This panel will show OCR comparisons, pick context, and top candidate matches.</p>
+                        </div>
+                    </div>
+                    <div class="color-spectrum">
+                        <h3>Position Color Spectrum</h3>
+                        <div class="spectrum-grid" id="colorSpectrum"></div>
+                    </div>
+                </div>
+                
+                <div class="download-options">
+                    <h3>Download Results</h3>
+                    <div class="download-buttons">
+                        <button class="btn btn-secondary" onclick="downloadResults('csv')">Download CSV</button>
+                        <button class="btn btn-secondary" onclick="downloadResults('json')">Download JSON</button>
+                        <button class="btn btn-secondary" onclick="downloadResults('overlay')">Download Overlay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Correction Modal -->
+        <div id="manualCorrectionModal" class="modal" style="display: none;">
+            <div class="modal-content manual-correction-modal">
+                <div class="modal-header">
+                    <h2>Manual Player Correction</h2>
+                    <span class="close-modal" onclick="closeManualCorrectionModal()">&times;</span>
+                </div>
+
+                <div class="correction-progress">
+                    <span id="correctionProgress">Cell 1 of X</span>
+                </div>
+
+                <div class="correction-content">
+                    <div class="cell-image-container">
+                        <img id="correctionCellImage" src="" alt="Cell to correct">
+                    </div>
+
+                    <div class="correction-form">
+                        <div class="form-group">
+                            <label for="playerNameInput">Player Name:</label>
+                            <input type="text" id="playerNameInput" placeholder="Type player name..." autocomplete="off">
+                            <div id="playerSuggestions" class="suggestions-list" style="display: none;"></div>
+                        </div>
+
+                        <div class="correction-info">
+                            <p><strong>OCR Text:</strong> <span id="ocrText"></span></p>
+                            <p><strong>Detected Position:</strong> <span id="detectedPosition"></span></p>
+                            <p><strong>Confidence:</strong> <span id="confidenceScore"></span></p>
+                        </div>
+
+                        <div class="correction-buttons">
+                            <button class="btn btn-secondary" onclick="skipCurrentCell()">Skip</button>
+                            <button class="btn btn-primary" onclick="saveCorrection()" id="saveCorrectionBtn" disabled>Save & Continue</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p id="loadingText">Processing...</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
