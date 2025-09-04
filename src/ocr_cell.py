@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import pytesseract
 import re
+import os
 from typing import Dict, Tuple, Optional
 
 def neutral_otsu(img_bgr: np.ndarray, *, invert: bool = True, antimerge: bool = False, return_bgr: bool = False) -> np.ndarray:
@@ -14,7 +15,7 @@ def neutral_otsu(img_bgr: np.ndarray, *, invert: bool = True, antimerge: bool = 
     h, w = img_bgr.shape[:2]
 
     gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
-    clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(clipLimit=2.2, tileGridSize=(20, 20))
     norm = clahe.apply(gray)
     blurred = cv2.GaussianBlur(norm, (3, 3), 0)
     sharp = cv2.addWeighted(norm, 1.3, blurred, -0.3, 0)
@@ -181,7 +182,7 @@ def read_cell(cell_img):
         x, y, w, h = roi
         return cell_img[y:y+h, x:x+w]
     
-    # OCR each ROI (preprocess with neutral Otsu; keep HSV/color on original cell_img)
+    # Standard pipeline with neutral Otsu per-ROI
     pos_text = ocr(neutral_otsu(crop(rois['pos']), invert=True, antimerge=False, return_bgr=False), psm=7, whitelist="QBWRTEDSTK")
     bye_text = ocr(neutral_otsu(crop(rois['bye']), invert=True, antimerge=False, return_bgr=False), psm=7, whitelist="BYE 0123456789")
     last_text = ocr(neutral_otsu(crop(rois['lastname']), invert=True, antimerge=False, return_bgr=False), psm=7)

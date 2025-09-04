@@ -2189,3 +2189,92 @@ function initializeCorrectionEventListeners() {
         }
     });
 }
+
+// ESPN Upload Functions
+function uploadToESPN() {
+    const leagueUrl = document.getElementById('espnLeagueUrl').value.trim();
+    const username = document.getElementById('espnUsername').value.trim();
+    const password = document.getElementById('espnPassword').value.trim();
+    const dryRun = document.getElementById('dryRunMode').checked;
+    
+    if (!leagueUrl || !username || !password) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    if (!leagueUrl.includes('fantasy.espn.com')) {
+        alert('Please enter a valid ESPN Fantasy Football league URL.');
+        return;
+    }
+    
+    // Show upload status section
+    document.getElementById('espnUploadStatus').style.display = 'block';
+    document.getElementById('uploadBtn').disabled = true;
+    document.getElementById('uploadBtn').textContent = 'Uploading...';
+    
+    logMessage('Starting ESPN upload process...', 'info');
+    setProgress(10);
+    
+    // Start upload process
+    const payload = {
+        league_url: leagueUrl,
+        username: username,
+        password: password,
+        dry_run: dryRun
+    };
+    
+    fetch('/upload_to_espn', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            logMessage('Upload completed successfully!', 'success');
+            setProgress(100);
+            if (data.log) {
+                data.log.forEach(entry => {
+                    logMessage(entry.message, entry.type || 'info');
+                });
+            }
+        } else {
+            logMessage('Upload failed: ' + data.error, 'error');
+            setProgress(0);
+        }
+    })
+    .catch(error => {
+        logMessage('Network error: ' + error.message, 'error');
+        setProgress(0);
+    })
+    .finally(() => {
+        document.getElementById('uploadBtn').disabled = false;
+        document.getElementById('uploadBtn').textContent = '🏈 Upload Draft to ESPN';
+    });
+}
+
+function logMessage(message, type = 'info') {
+    const log = document.getElementById('uploadLog');
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+    log.appendChild(entry);
+    log.scrollTop = log.scrollLength;
+}
+
+function setProgress(percentage) {
+    const progressFill = document.getElementById('uploadProgress');
+    progressFill.style.width = percentage + '%';
+}
+
+// Add navigation to Step 7
+function showStep7() {
+    // Hide all steps
+    for (let i = 1; i <= 7; i++) {
+        document.getElementById(`step${i}`).style.display = 'none';
+    }
+    // Show step 7
+    document.getElementById('step7').style.display = 'block';
+}

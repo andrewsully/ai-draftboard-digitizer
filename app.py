@@ -23,6 +23,7 @@ from src.preprocess import normalize_board
 from src.grid import cells_from_rectified
 from src.ocr_cell import read_cell
 from src.reconcile import load_players, reconcile_cell_with_position, grid_to_draft_pick
+from src.reconcile import top_n_matches_with_position, normalize_name, player_identity
 from src.emit import emit_all_outputs
 from src.manual_color_calibration import ManualColorCalibrator
 
@@ -451,6 +452,10 @@ def process_board():
         
         debug_ocr = []
 
+        # Track which cell holds which player identity, and whether that assignment came from an exact last-name match
+        assignments_by_identity = {}  # identity -> { 'cell_index': int, 'exact': bool }
+        identity_by_cell = {}  # cell_index -> identity
+
         for i, (row, col, x, y, w, h) in enumerate(cells):
             cell_img = rectified_image[y:y+h, x:x+w]
             
@@ -502,7 +507,6 @@ def process_board():
             # Collect debug comparison info for this cell
             # Include top-3 candidate suggestions (filtered by used players and color)
             try:
-                from src.reconcile import top_n_matches_with_position
                 chosen_ocr = (ocr_result_whole if result is result_whole else ocr_result_roi)
                 top3 = top_n_matches_with_position(
                     chosen_ocr.get('ocr_last') or '',
@@ -522,6 +526,155 @@ def process_board():
                 ]
             except Exception:
                 top3_list = []
+
+            # Exact last-name override and reassignment logic
+            try:
+                chosen_ocr = (ocr_result_whole if result is result_whole else ocr_result_roi)
+                ocr_last_norm = normalize_name(chosen_ocr.get('ocr_last', '') or '')
+                exact_candidates = []
+                if ocr_last_norm:
+                    exact_pool = top_n_matches_with_position(
+                        chosen_ocr.get('ocr_last') or '',
+                        row, col, used_players, players, color_pos,
+                        ocr_results=chosen_ocr, include_used=True, n=5
+                    )
+                    for (cand_score, cand_player, cand_rank, bd) in exact_pool:
+                        if normalize_name(cand_player.last) == ocr_last_norm:
+                            exact_candidates.append((cand_score, cand_player, cand_rank, bd))
+
+                def build_result_for(player_obj, score_val, rank_val, breakdown_dict):
+                    expected_pick_local = grid_to_draft_pick(row, col)
+                    return {
+                        'row': row,
+                        'col': col,
+                        'full_name': player_obj.full,
+                        'first': player_obj.first,
+                        'last': player_obj.last,
+                        'team': player_obj.team,
+                        'pos': player_obj.pos,
+                        'bye': player_obj.bye,
+                        'is_dst': player_obj.is_dst,
+                        'match_score': score_val,
+                        'use_match': True,  # override threshold for exact last-name
+                        'source_last': 'csv',
+                        'conf_last': score_val,
+                        'expected_pick': expected_pick_local,
+                        'expected_rank': rank_val,
+                        'actual_pick': expected_pick_local,
+                        'position_diff': 0,
+                        'raw_ocr': {
+                            'pos': chosen_ocr.get('ocr_pos', ''),
+                            'color_pos': chosen_ocr.get('color_pos'),
+                            'bye': chosen_ocr.get('ocr_bye'),
+                            'last': chosen_ocr.get('ocr_last', ''),
+                            'team': chosen_ocr.get('ocr_team', ''),
+                            'first': chosen_ocr.get('ocr_first', '')
+                        },
+                        'best_candidate': {
+                            'full_name': player_obj.full,
+                            'first': player_obj.first,
+                            'last': player_obj.last,
+                            'team': player_obj.team,
+                            'pos': player_obj.pos,
+                            'bye': player_obj.bye,
+                            'is_dst': player_obj.is_dst,
+                            'rank': rank_val
+                        },
+                        'best_candidate_confidence': score_val,
+                        'score_breakdown': breakdown_dict,
+                        'override': 'exact_lastname'
+                    }
+
+                # If there is an exact last-name candidate, consider override
+                if exact_candidates:
+                    exact_candidates.sort(key=lambda x: x[0], reverse=True)
+                    cand_score, cand_player, cand_rank, cand_bd = exact_candidates[0]
+                    cand_id = player_identity(cand_player)
+                    assigned = assignments_by_identity.get(cand_id)
+
+                    if assigned is not None and not assigned.get('exact', False):
+                        # Takeover from a non-exact assignment
+                        prev_idx = assigned['cell_index']
+
+                        # Assign exact candidate to current cell immediately
+                        result = build_result_for(cand_player, cand_score, cand_rank, cand_bd)
+                        identity_by_cell[i] = cand_id
+                        assignments_by_identity[cand_id] = {'cell_index': i, 'exact': True}
+
+                        # Recompute displaced cell j without the taken player (exclude even if not hard-locked)
+                        try:
+                            (prev_row, prev_col, px, py, pw, ph) = cells[prev_idx]
+                            prev_img = rectified_image[py:py+ph, px:px+pw]
+
+                            prev_roi = read_cell(prev_img)
+                            prev_whole = read_cell_whole(prev_img)
+
+                            # Re-detect color position consistently
+                            prev_hsv = dominant_nonwhite_hsv(prev_img)
+                            prev_pos, prev_conf = calibrator.detect_position_from_color(prev_hsv)
+                            prev_color_pos = prev_pos if prev_conf > 0.3 else None
+                            prev_roi['color_pos'] = prev_color_pos
+                            prev_whole['color_pos'] = prev_color_pos
+
+                            # Build a temporary used set that includes the taken identity
+                            prev_used = set(used_players)
+                            prev_used.add(cand_id)
+
+                            prev_result_roi = reconcile_cell_with_position(
+                                prev_roi, prev_row, prev_col, prev_used, players, confidence_threshold=45.0
+                            )
+                            prev_result_whole = reconcile_cell_with_position(
+                                prev_whole, prev_row, prev_col, prev_used, players, confidence_threshold=45.0
+                            )
+
+                            # Try swapped whole as before
+                            prev_swapped = dict(prev_whole)
+                            prev_swapped['ocr_first'], prev_swapped['ocr_last'] = (
+                                prev_whole.get('ocr_last', ''), prev_whole.get('ocr_first', '')
+                            )
+                            prev_swapped['color_pos'] = prev_color_pos
+                            prev_result_whole_swapped = reconcile_cell_with_position(
+                                prev_swapped, prev_row, prev_col, used_players, players, confidence_threshold=45.0
+                            )
+                            if (prev_result_whole_swapped and prev_result_whole_swapped.get('match_score', 0) > (prev_result_whole or {}).get('match_score', 0)):
+                                prev_result_whole = prev_result_whole_swapped
+                                prev_whole = prev_swapped
+
+                            # Choose better for prev cell
+                            if (prev_result_whole and prev_result_whole.get('match_score', 0) > (prev_result_roi or {}).get('match_score', 0)):
+                                new_prev_result = prev_result_whole
+                                prev_chosen_ocr = prev_whole
+                            else:
+                                new_prev_result = prev_result_roi
+                                prev_chosen_ocr = prev_roi
+
+                            results[prev_idx] = new_prev_result
+
+                            # Update assignment mapping for previous cell based on its new result
+                            if new_prev_result and new_prev_result.get('use_match'):
+                                new_prev_id = (
+                                    new_prev_result.get('first'),
+                                    new_prev_result.get('last'),
+                                    new_prev_result.get('team'),
+                                    new_prev_result.get('pos'),
+                                    new_prev_result.get('bye') if new_prev_result.get('bye') is not None else 0
+                                )
+                                identity_by_cell[prev_idx] = new_prev_id
+                                # Determine if prev new assignment is exact
+                                prev_exact = normalize_name(prev_chosen_ocr.get('ocr_last', '') or '') == normalize_name(new_prev_result.get('last', '') or '')
+                                assignments_by_identity[new_prev_id] = {'cell_index': prev_idx, 'exact': prev_exact}
+
+                        except Exception:
+                            pass
+
+                    else:
+                        # If no one holds this player yet and our current result is below threshold, take it
+                        if not (result and result.get('use_match')):
+                            result = build_result_for(cand_player, cand_score, cand_rank, cand_bd)
+                            identity_by_cell[i] = cand_id
+                            assignments_by_identity[cand_id] = {'cell_index': i, 'exact': True}
+            except Exception:
+                pass
 
             debug_ocr.append({
                 'row': row,
@@ -547,6 +700,25 @@ def process_board():
                 },
                 'top3': top3_list
             })
+
+            # Record assignment mapping for accepted results (if not already set via override)
+            if result and result.get('use_match'):
+                try:
+                    assigned_id = (
+                        result.get('first'),
+                        result.get('last'),
+                        result.get('team'),
+                        result.get('pos'),
+                        result.get('bye') if result.get('bye') is not None else 0
+                    )
+                    if i not in identity_by_cell:
+                        # Determine if this was an exact last-name assignment
+                        chosen_ocr_local = (ocr_result_whole if result is result_whole else ocr_result_roi)
+                        exact_flag_local = normalize_name(chosen_ocr_local.get('ocr_last', '') or '') == normalize_name(result.get('last', '') or '')
+                        identity_by_cell[i] = assigned_id
+                        assignments_by_identity[assigned_id] = {'cell_index': i, 'exact': exact_flag_local}
+                except Exception:
+                    pass
 
             if result and result.get('use_match'):
                 sb = result.get('score_breakdown', {}) or {}
@@ -972,6 +1144,47 @@ def get_progress():
         'percentage': 0
     })
     return jsonify(progress)
+
+@app.route('/upload_to_espn', methods=['POST'])
+def upload_to_espn():
+    """Upload draft results to ESPN Fantasy Football using Selenium"""
+    try:
+        data = request.get_json()
+        league_url = data.get('league_url')
+        username = data.get('username')
+        password = data.get('password')
+        dry_run = data.get('dry_run', True)
+        
+        if not all([league_url, username, password]):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        if 'results' not in session_data:
+            return jsonify({'error': 'No draft results available'}), 400
+        
+        # Get draft results
+        results = session_data['results']
+        team_count = session_data.get('team_count', 10)
+        
+        # Import and run ESPN automation
+        from src.espn_uploader import ESPNUploader
+        
+        uploader = ESPNUploader(
+            league_url=league_url,
+            username=username,
+            password=password,
+            dry_run=dry_run
+        )
+        
+        success, log_entries = uploader.upload_draft_results(results, team_count)
+        
+        return jsonify({
+            'success': success,
+            'log': log_entries,
+            'message': 'Draft uploaded successfully!' if success else 'Upload failed'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5001)

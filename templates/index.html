@@ -212,6 +212,14 @@
                     <button class="btn btn-secondary" onclick="switchView('debug')" id="debugBtn">Debug View</button>
                 </div>
                 
+                <!-- Upload to ESPN -->
+                <div class="upload-to-espn-section">
+                    <button class="btn btn-success" onclick="showStep7()" id="uploadToEspnBtn">
+                        🏈 Upload to ESPN Fantasy
+                    </button>
+                    <small>Export your draft results to ESPN Fantasy Football</small>
+                </div>
+                
                 <!-- Big Board View -->
                 <div class="results-table" id="bigboardView">
                     <table id="resultsTable">
@@ -297,6 +305,55 @@
                             <button class="btn btn-primary" onclick="saveCorrection()" id="saveCorrectionBtn" disabled>Save & Continue</button>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 7: Upload to ESPN -->
+        <div class="step" id="step7" style="display: none;">
+            <h2>Step 7: Upload to ESPN Fantasy</h2>
+            <div class="espn-upload-section">
+                <div class="upload-form">
+                    <div class="form-group">
+                        <label for="espnLeagueUrl">ESPN Fantasy League URL:</label>
+                        <input type="url" id="espnLeagueUrl" placeholder="https://fantasy.espn.com/football/league?leagueId=..." class="url-input">
+                        <small>Paste your ESPN fantasy football league URL here</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="espnUsername">ESPN Username:</label>
+                        <input type="text" id="espnUsername" placeholder="your.email@example.com" class="text-input">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="espnPassword">ESPN Password:</label>
+                        <input type="password" id="espnPassword" placeholder="Your ESPN password" class="text-input">
+                        <small>⚠️ Credentials are used only for this session and not stored</small>
+                    </div>
+                    
+                    <div class="upload-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="dryRunMode" checked>
+                            <span>Dry run mode (preview only, don't actually submit)</span>
+                        </label>
+                    </div>
+                    
+                    <div class="upload-actions">
+                        <button class="btn btn-secondary" onclick="previousStep()">← Back to Results</button>
+                        <button class="btn btn-primary" onclick="uploadToESPN()" id="uploadBtn">
+                            🏈 Upload Draft to ESPN
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upload-status" id="espnUploadStatus" style="display: none;">
+                    <div class="status-header">
+                        <h3>Upload Progress</h3>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="uploadProgress"></div>
+                        </div>
+                    </div>
+                    <div class="status-log" id="uploadLog"></div>
                 </div>
             </div>
         </div>

@@ -52,15 +52,31 @@ draftboard_ocr/
 │   ├── ocr_cell.py               # OCR and color detection
 │   ├── reconcile.py              # Player matching and reconciliation
 │   ├── emit.py                   # Output generation
+│   ├── espn_uploader.py          # ESPN Fantasy Football integration
 │   ├── color_calibration.py      # Color profile framework
 │   ├── manual_color_calibration.py # Manual color calibration
 │   └── color_visualization.py    # Visual analysis tools
+├── templates/                    # Web interface templates
+│   └── index.html                # Main web interface
+├── static/                       # Web assets
+│   ├── script.js                 # Frontend JavaScript
+│   ├── style.css                 # Frontend CSS
+│   └── uploads/                  # Temporary web uploads
 ├── data/                         # Input data
 │   ├── draftboard.png            # Draft board image
+│   ├── formattemplate.png        # Format reference image
 │   ├── top500_playernames.csv    # Player database
 │   └── positional_color_examples/ # Color calibration images
-├── run_full_board.py             # Main execution script
-└── requirements.txt              # Python dependencies
+├── uploads/                      # User uploaded images (web interface)
+├── web_output/                   # Web interface processing output
+├── full_board_out/               # CLI processing output
+├── app.py                        # Main Flask web application
+├── start_web.py                  # Web startup script (auto-opens browser)
+├── run_full_board.py             # CLI execution script
+├── ProjectPlan.txt               # Detailed project documentation
+├── README.md                     # This file
+├── requirements.txt              # Python dependencies
+└── .gitignore                    # Git ignore patterns
 ```
 
 ## 🛠️ Installation
@@ -84,19 +100,27 @@ draftboard_ocr/
 ## 🎮 Usage
 
 ### Web Interface (Recommended)
+
+**Option 1: Direct launch (no auto-browser)**
+```bash
+python3 app.py
+```
+
+**Option 2: Startup script (auto-opens browser)**
 ```bash
 python3 start_web.py
 ```
 
 This will:
 1. Start the web server on http://localhost:5001
-2. Open your browser automatically
+2. Open your browser automatically (start_web.py only)
 3. Provide an interactive interface for:
    - Uploading your draft board image
    - Cropping the image to focus on the board
    - Calibrating colors by clicking on each position
    - Processing and viewing results
    - Downloading results in multiple formats
+   - Uploading results to ESPN Fantasy Football
 
 ### Command Line Interface
 ```bash
@@ -111,11 +135,19 @@ This will:
 5. Generate outputs in `full_board_out/`
 
 ### Output Files
+
+**CLI Output** (`full_board_out/` directory):
 - **`board.csv`**: Complete data in CSV format
 - **`rows.txt`**: Row-major draft format
 - **`cols.txt`**: Column-major format
 - **`overlay.png`**: Visual overlay with all matches
 - **`board.json`**: Detailed JSON data
+
+**Web Interface Output** (`web_output/results/` directory):
+- **`board.csv`**: Complete data in CSV format
+- **`board.json`**: Detailed JSON data
+- **`overlay.png`**: Visual overlay with all matches
+- **`cells/`**: Individual cell images for manual correction
 
 ### Color Calibration
 To calibrate for different sticker colors:
