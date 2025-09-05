@@ -4,10 +4,9 @@ A sophisticated OCR system for extracting player information from fantasy footba
 
 ## 🎬 Live Demo
 
-> **Demo Video Available**: `uploads/project_demo2.mp4` (117MB)  
-> *AI-narrated demo featuring Chris Collinsworth and Al Michaels walking through the complete system from draft board photo to ESPN Fantasy integration.*
+[🎬 **Watch Demo Video**](uploads/project_demo2.mp4)
 
-**Note**: Due to GitHub's file size limits, the demo video is included locally but not in the repository. For the full experience, clone the repo and run the system yourself!
+*AI-narrated demo featuring Chris Collinsworth and Al Michaels walking through the complete system from draft board photo to ESPN Fantasy integration.*
 
 ## 🚀 Features
 
