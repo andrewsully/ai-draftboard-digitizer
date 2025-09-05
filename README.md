@@ -3,11 +3,7 @@
 A sophisticated OCR system for extracting player information from fantasy football draft boards using computer vision, color-based position detection, and intelligent player matching.
 
 ## 🎬 Live Demo
-
-<video width="100%" controls>
-  <source src="uploads/project_demo_final.mp4" type="video/mp4">
-  <a href="uploads/project_demo_final.mp4">🎬 **Watch Demo Video**</a>
-</video>
+https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
 
 *AI-narrated demo featuring Chris Collinsworth and Al Michaels walking through the complete system from draft board photo to ESPN Fantasy integration.*
 
