@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Preprocessing Pipeline - Visual Flowchart</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+        }
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .stage-board { background-color: #2196f3; }
+        .stage-grid { background-color: #4caf50; }
+        .stage-dual { background-color: #ff9800; }
+        .stage-roi { background-color: #e91e63; }
+        .stage-whole { background-color: #673ab7; }
+        .stage-competition { background-color: #ff5722; }
+        .stage-color { background-color: #607d8b; }
+        .stage-final { background-color: #009688; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Preprocessing and OCR Pipeline</h1>
+        
+        <div class="mermaid">
+flowchart TD
+    A["Raw Draft Board Image"] --> B["Board-Level Preprocessing<br/>(normalize_board)"]
+    
+    B --> B1["Convert BGR → HSV"]
+    B1 --> B2["Apply CLAHE to V channel<br/>(clipLimit=2.0, tileSize=8x8)"]
+    B2 --> B3["Convert HSV → BGR"]
+    B3 --> B4["Bilateral Filter Denoising<br/>(d=9, sigmaColor=75, sigmaSpace=75)"]
+    B4 --> B5["Save rectified.png"]
+    
+    B5 --> C["Grid Extraction<br/>(cells_from_rectified)"]
+    C --> C1["Calculate precise cell boundaries<br/>(16 rows × 10 cols default)"]
+    C1 --> C2["Extract individual cell images<br/>using integer boundaries"]
+    C2 --> C3["Save cell images: r{row}_c{col}.png"]
+    
+    C3 --> D["Dual OCR Strategy<br/>(Both approaches run in parallel)"]
+    
+    D --> D_ROI["ROI-Based Approach<br/>(read_cell)"]
+    D --> D_WHOLE["Whole-Cell Approach<br/>(read_cell_whole)"]
+    
+    D_ROI --> D1["Define ROI Regions"]
+    D1 --> D1a["Position ROI: top-left 35% × 25%"]
+    D1 --> D1b["Bye ROI: top-right 35% × 25%"]
+    D1 --> D1c["Last Name ROI: center 80% × 40%"]
+    D1 --> D1d["Team ROI: bottom-left 35% × 25%"]
+    D1 --> D1e["First Name ROI: bottom-right 35% × 25%"]
+    
+    D1a --> E_ROI["ROI OCR Preprocessing<br/>(neutral_otsu per ROI)"]
+    D1b --> E_ROI
+    D1c --> E_ROI
+    D1d --> E_ROI
+    D1e --> E_ROI
+    
+    D_WHOLE --> E_WHOLE["Whole-Cell Preprocessing<br/>(neutral_otsu on full cell)"]
+    
+    E_ROI --> E1_ROI["Convert BGR → Grayscale<br/>(per ROI)"]
+    E1_ROI --> E2_ROI["Apply CLAHE Enhancement<br/>(clipLimit=2.2, tileSize=20x20)"]
+    E2_ROI --> E3_ROI["Gaussian Blur + Unsharp Masking"]
+    E3_ROI --> E4_ROI["Otsu Thresholding + Morphological Ops"]
+    E4_ROI --> F_ROI["ROI-Specific OCR Execution"]
+    
+    F_ROI --> F1["Position OCR<br/>(PSM=7, whitelist='QBWRTEDSTK')"]
+    F_ROI --> F2["Bye OCR<br/>(PSM=7, whitelist='BYE 0123456789')"]
+    F_ROI --> F3["Last Name OCR<br/>(PSM=7, no whitelist)"]
+    F_ROI --> F4["Team OCR<br/>(PSM=7, no whitelist)"]
+    F_ROI --> F5["First Name OCR<br/>(PSM=7, no whitelist)"]
+    
+    E_WHOLE --> E1_WHOLE["Convert BGR → Grayscale<br/>(full cell)"]
+    E1_WHOLE --> E2_WHOLE["Apply CLAHE Enhancement"]
+    E2_WHOLE --> E3_WHOLE["Gaussian Blur + Unsharp Masking"]
+    E3_WHOLE --> E4_WHOLE["Otsu Thresholding + Morphological Ops"]
+    E4_WHOLE --> F_WHOLE["Whole-Cell OCR Execution<br/>(PSM=6, get tokens with confidence)"]
+    
+    F_WHOLE --> F6["Parse all text tokens"]
+    F6 --> F7["Regex-based field extraction<br/>(BYE, positions, teams)"]
+    F7 --> F8["Intelligent name parsing<br/>(longest non-stopword token)"]
+    F8 --> F9["Optional first/last name swapping"]
+    
+    F1 --> G_ROI["ROI Text Post-Processing"]
+    F2 --> G_ROI
+    F3 --> G_ROI
+    F4 --> G_ROI
+    F5 --> G_ROI
+    
+    F9 --> G_WHOLE["Whole-Cell Text Results"]
+    
+    G_ROI --> J["Reconciliation & Competition"]
+    G_WHOLE --> J
+    
+    J --> J1["Run reconciliation on both results"]
+    J1 --> J2["Test name swapping on whole-cell result"]
+    J2 --> J3["Compare match scores"]
+    J3 --> J4["Select best performing approach"]
+    
+    J4 --> H["Color Analysis<br/>(dominant_nonwhite_hsv)"]
+    
+    H --> H1["Filter out white/background pixels<br/>(V>30, V<250, S>20)"]
+    H1 --> H2["K-means clustering<br/>(k=3 clusters)"]
+    H2 --> H3["Select dominant cluster<br/>(largest pixel count)"]
+    H3 --> H4["Extract HSV color values"]
+    
+    H4 --> I["Final Cell Results"]
+    I --> I1["OCR text fields<br/>(pos, bye, last, team, first)"]
+    I --> I2["Color-based position prediction"]
+    I --> I3["Confidence scores"]
+    
+    style B fill:#2196f3,color:#fff
+    style C fill:#4caf50,color:#fff
+    style D fill:#ff9800,color:#fff
+    style D_ROI fill:#e91e63,color:#fff
+    style D_WHOLE fill:#673ab7,color:#fff
+    style E_ROI fill:#9c27b0,color:#fff
+    style E_WHOLE fill:#3f51b5,color:#fff
+    style F_ROI fill:#f44336,color:#fff
+    style F_WHOLE fill:#2196f3,color:#fff
+    style G_ROI fill:#795548,color:#fff
+    style G_WHOLE fill:#4caf50,color:#fff
+    style J fill:#ff5722,color:#fff
+    style H fill:#607d8b,color:#fff
+    style I fill:#009688,color:#fff
+        </div>
+
+        <div class="legend">
+            <h3>Pipeline Stages Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color stage-board"></div>
+                <strong>Board-Level Preprocessing:</strong> CLAHE enhancement and bilateral filtering on full board
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-grid"></div>
+                <strong>Grid Extraction:</strong> Precise cell boundary calculation and individual cell extraction
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-dual"></div>
+                <strong>Dual OCR Strategy:</strong> Both ROI and whole-cell approaches run in parallel
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-roi"></div>
+                <strong>ROI-Based Approach:</strong> Targeted OCR on 5 specific regions per cell
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-whole"></div>
+                <strong>Whole-Cell Approach:</strong> Single OCR pass on entire cell with intelligent parsing
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-competition"></div>
+                <strong>Reconciliation & Competition:</strong> Both approaches compete, best result wins
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-color"></div>
+                <strong>Color Analysis:</strong> K-means clustering for position prediction
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stage-final"></div>
+                <strong>Final Results:</strong> Combined OCR text, color prediction, and confidence scores
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background-color: #e8f5e9; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #2e7d32;">Key Features:</h3>
+            <ul>
+                <li><strong>Dual Strategy:</strong> ROI-based and whole-cell OCR run simultaneously</li>
+                <li><strong>Competitive Selection:</strong> System automatically chooses the best performing result</li>
+                <li><strong>Robust Preprocessing:</strong> Multi-step neutral_otsu enhancement pipeline</li>
+                <li><strong>Intelligent Parsing:</strong> Regex-based field extraction with stopword filtering</li>
+                <li><strong>Name Swapping:</strong> Tests first/last name combinations for better matches</li>
+                <li><strong>Color Validation:</strong> K-means clustering provides secondary position verification</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>
