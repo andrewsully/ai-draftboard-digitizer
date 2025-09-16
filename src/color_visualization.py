@@ -254,7 +254,7 @@ class ColorVisualizer:
             cell_filename = f"cell_{pred['cell_id']:03d}_R{pred['row']}_C{pred['col']}_{position or 'None'}.png"
             cv2.imwrite(os.path.join(output_dir, cell_filename), labeled_img)
 
-def visualize_color_predictions(image_path: str = "data/draftboard.png"):
+def visualize_color_predictions(image_path: str = "examples/sample_data/draftboard.png"):
     """Main function to create color prediction visualizations."""
     visualizer = ColorVisualizer()
     

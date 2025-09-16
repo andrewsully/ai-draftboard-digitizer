@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Player Prediction with Name Swapping and Exact Match Override</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+        }
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .dual-input { background-color: #2196f3; }
+        .reconciliation { background-color: #4caf50; }
+        .name-swap { background-color: #ff9800; }
+        .competition { background-color: #9c27b0; }
+        .preliminary { background-color: #f44336; }
+        .exact-system { background-color: #795548; }
+        .processing { background-color: #607d8b; }
+        .stealing { background-color: #e91e63; }
+        .assignment { background-color: #3f51b5; }
+        .tracking { background-color: #009688; }
+        .final { background-color: #1976d2; }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-box {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #2196f3;
+        }
+        .feature-box h4 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .stealing-logic {
+            background-color: #fce4ec;
+            border-left-color: #e91e63;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .stealing-logic h3 {
+            color: #c2185b;
+            margin-top: 0;
+        }
+        .rule-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 8px;
+            background-color: white;
+            border-radius: 3px;
+        }
+        .rule-icon {
+            font-size: 18px;
+            margin-right: 10px;
+            width: 25px;
+        }
+        .can-steal { color: #4caf50; }
+        .cannot-steal { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Player Prediction: Name Swapping & Exact Match Override</h1>
+        
+        <div class="mermaid">
+flowchart TD
+    A["Dual OCR Results<br/>(ROI + Whole-Cell)"] --> B["Standard Reconciliation"]
+    
+    B --> B1["Run reconciliation on ROI result"]
+    B --> B2["Run reconciliation on Whole-Cell result"]
+    
+    B1 --> C["ROI Result Ready"]
+    B2 --> D["Name Swapping Logic<br/>(Whole-Cell Only)"]
+    
+    D --> D1["Create swapped OCR data<br/>(first ↔ last names)"]
+    D1 --> D2["Run reconciliation on swapped version"]
+    D2 --> D3{"Swapped score greater than<br/>original score?"}
+    D3 -->|Yes| D4["Use swapped result"]
+    D3 -->|No| D5["Keep original result"]
+    D4 --> E["Whole-Cell Result Ready"]
+    D5 --> E
+    
+    C --> F["Competition: ROI vs Whole-Cell"]
+    E --> F
+    F --> F1{"Which has higher<br/>match score?"}
+    F1 -->|Whole-Cell| G1["Select Whole-Cell Winner"]
+    F1 -->|ROI or tie| G2["Select ROI Winner"]
+    
+    G1 --> H["Preliminary Player Assignment"]
+    G2 --> H
+    
+    H --> I["Exact Match Override System"]
+    I --> I1["Check for exact last name matches<br/>(include already-used players)"]
+    I1 --> I2["Find candidates with normalized<br/>last name = OCR last name"]
+    I2 --> I3{"Exact match<br/>candidates found?"}
+    
+    I3 -->|No| J["Standard Assignment"]
+    I3 -->|Yes| K["Exact Match Processing"]
+    
+    K --> K1["Get highest-scoring exact match"]
+    K1 --> K2["Check if player already assigned"]
+    K2 --> K3{"Player assigned to<br/>another cell?"}
+    
+    K3 -->|No| K4["Direct assignment<br/>(player available)"]
+    K3 -->|Yes| K5["Check assignment type"]
+    K5 --> K6{"Previous assignment<br/>was exact match?"}
+    
+    K6 -->|Yes| K7["LOCKED - Cannot steal<br/>(use standard assignment)"]
+    K6 -->|No| K8["STEAL PLAYER<br/>(override non-exact assignment)"]
+    
+    K8 --> K8a["Remove player from previous cell"]
+    K8a --> K8b["Assign exact match to current cell"]
+    K8b --> K8c["Mark as exact assignment"]
+    K8c --> K8d["Recompute displaced cell<br/>(without stolen player)"]
+    K8d --> K8e["Run full reconciliation on displaced cell"]
+    
+    K4 --> L["Final Assignment Complete"]
+    K7 --> J
+    K8e --> L
+    J --> L
+    
+    L --> L1["Update tracking systems"]
+    L1 --> L1a["Add to used_players set"]
+    L1 --> L1b["Update assignments_by_identity"]
+    L1 --> L1c["Update identity_by_cell mapping"]
+    
+    L1c --> M["Player Locked In"]
+    M --> M1["Player identity with source"]
+    M --> M2["Assignment type (exact/standard)"]
+    M --> M3["Match confidence and breakdown"]
+    M --> M4["Override reason (if applicable)"]
+    
+    M4 --> N["Complete Player Record"]
+    
+    style A fill:#2196f3,color:#fff
+    style B fill:#4caf50,color:#fff
+    style D fill:#ff9800,color:#fff
+    style F fill:#9c27b0,color:#fff
+    style H fill:#f44336,color:#fff
+    style I fill:#795548,color:#fff
+    style K fill:#607d8b,color:#fff
+    style K8 fill:#e91e63,color:#fff
+    style L fill:#3f51b5,color:#fff
+    style M fill:#009688,color:#fff
+    style N fill:#1976d2,color:#fff
+        </div>
+
+        <div class="legend">
+            <h3>Advanced Processing Stages</h3>
+            <div class="legend-item">
+                <div class="legend-color dual-input"></div>
+                <strong>Dual OCR Input:</strong> Both ROI and whole-cell OCR results ready for processing
+            </div>
+            <div class="legend-item">
+                <div class="legend-color reconciliation"></div>
+                <strong>Standard Reconciliation:</strong> Multi-factor scoring on both OCR approaches
+            </div>
+            <div class="legend-item">
+                <div class="legend-color name-swap"></div>
+                <strong>Name Swapping:</strong> Test first/last name arrangements for whole-cell OCR
+            </div>
+            <div class="legend-item">
+                <div class="legend-color competition"></div>
+                <strong>Competition System:</strong> ROI vs whole-cell result comparison
+            </div>
+            <div class="legend-item">
+                <div class="legend-color preliminary"></div>
+                <strong>Preliminary Assignment:</strong> Initial best match selection
+            </div>
+            <div class="legend-item">
+                <div class="legend-color exact-system"></div>
+                <strong>Exact Match System:</strong> Perfect last name match detection and processing
+            </div>
+            <div class="legend-item">
+                <div class="legend-color processing"></div>
+                <strong>Match Processing:</strong> Candidate evaluation and availability checking
+            </div>
+            <div class="legend-item">
+                <div class="legend-color stealing"></div>
+                <strong>Player Stealing:</strong> Override non-exact assignments with exact matches
+            </div>
+            <div class="legend-item">
+                <div class="legend-color assignment"></div>
+                <strong>Final Assignment:</strong> Player locked to cell with full tracking
+            </div>
+            <div class="legend-item">
+                <div class="legend-color tracking"></div>
+                <strong>System Tracking:</strong> Update all tracking and identity systems
+            </div>
+            <div class="legend-item">
+                <div class="legend-color final"></div>
+                <strong>Complete Record:</strong> Final player data with metadata
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h4>🔄 Name Swapping Logic</h4>
+                <ul>
+                    <li><strong>Automatic Testing:</strong> Swaps first/last names on whole-cell OCR</li>
+                    <li><strong>Score Comparison:</strong> Tests both arrangements</li>
+                    <li><strong>Best Selection:</strong> Uses higher-scoring arrangement</li>
+                    <li><strong>OCR Error Handling:</strong> Compensates for name field confusion</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>🎯 Competition System</h4>
+                <ul>
+                    <li><strong>Head-to-Head:</strong> ROI vs whole-cell (possibly swapped)</li>
+                    <li><strong>Score-Based:</strong> Highest match score wins</li>
+                    <li><strong>Tie-Breaking:</strong> ROI preferred on equal scores</li>
+                    <li><strong>Best Result:</strong> Optimal OCR approach selected</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>🔍 Exact Match Detection</h4>
+                <ul>
+                    <li><strong>Normalized Comparison:</strong> Handles case/spacing variations</li>
+                    <li><strong>Include Used Players:</strong> Searches ALL players</li>
+                    <li><strong>Override Confidence:</strong> Bypasses normal thresholds</li>
+                    <li><strong>Perfect Matching:</strong> Zero tolerance for name differences</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>🔧 Advanced Tracking</h4>
+                <ul>
+                    <li><strong>Assignment Types:</strong> Exact vs standard matching</li>
+                    <li><strong>Player Locking:</strong> Prevents unwanted reassignments</li>
+                    <li><strong>Cell Mapping:</strong> Bidirectional player-cell tracking</li>
+                    <li><strong>Audit Trail:</strong> Complete decision history</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="stealing-logic">
+            <h3>🎯 Player Stealing Rules</h3>
+            <p>The system can intelligently reassign players when exact matches are found:</p>
+            
+            <div class="rule-item">
+                <span class="rule-icon can-steal">✅</span>
+                <strong>CAN STEAL:</strong> Player assigned via standard (fuzzy) matching can be stolen by exact match
+            </div>
+            
+            <div class="rule-item">
+                <span class="rule-icon cannot-steal">❌</span>
+                <strong>CANNOT STEAL:</strong> Player assigned via exact matching is locked and cannot be stolen
+            </div>
+            
+            <h4>Reassignment Process:</h4>
+            <ol>
+                <li><strong>Remove</strong> player from previous cell assignment</li>
+                <li><strong>Assign</strong> exact match to current cell with 'exact' flag</li>
+                <li><strong>Recompute</strong> displaced cell without the stolen player</li>
+                <li><strong>Full reconciliation</strong> on displaced cell to find new best match</li>
+            </ol>
+            
+            <p><strong>Why This Matters:</strong> Ensures that perfect name matches (exact OCR reads) always take priority over fuzzy matches, leading to higher overall accuracy across the entire draft board.</p>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background-color: #e8f5e9; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #2e7d32;">🚀 System Intelligence Highlights:</h3>
+            <ul>
+                <li><strong>Name Confusion Recovery:</strong> Automatically handles first/last name OCR errors</li>
+                <li><strong>Exact Match Priority:</strong> Perfect matches override fuzzy matches system-wide</li>
+                <li><strong>Smart Reassignment:</strong> Displaced cells get full re-reconciliation</li>
+                <li><strong>Player Locking:</strong> Prevents cascading reassignments</li>
+                <li><strong>Zero Data Loss:</strong> Every cell gets optimal available match</li>
+                <li><strong>Audit Transparency:</strong> Complete tracking of all decisions and overrides</li>
+                <li><strong>Graceful Degradation:</strong> Falls back gracefully when stealing isn't possible</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #fff3e0; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #ef6c00;">🎨 Real-World Impact:</h3>
+            <p>This system handles complex scenarios like:</p>
+            <ul>
+                <li><strong>"MAHOMES" vs "MAHOMES, PATRICK":</strong> Exact match steals from fuzzy match</li>
+                <li><strong>"PATRICK MAHOMES" vs "MAHOMES PATRICK":</strong> Name swapping finds correct arrangement</li>
+                <li><strong>Multiple "SMITH" players:</strong> Exact matches prevent misassignments</li>
+                <li><strong>OCR reading "FIRST LAST" as "LAST, FIRST":</strong> Automatic correction via swapping</li>
+            </ul>
+            <p><strong>Result:</strong> Industry-leading accuracy on real-world draft boards with complex layouts and OCR challenges.</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

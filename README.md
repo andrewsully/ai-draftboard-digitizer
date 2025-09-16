@@ -88,25 +88,25 @@ When a cell contains a perfect OCR match for a player's last name, the system ca
 
 Comprehensive visual documentation of the system's technical processes:
 
-- **[Color Detection Process](docs/color_detection_process.pdf)** - Two-tier color detection system with OCR-based sampling and K-means fallback
-- **[Image Preprocessing Pipeline](docs/image_preprocessing_pipeline.pdf)** - Dual OCR strategy with ROI-based and whole-cell competition
-- **[Player Name Prediction](docs/player_name_prediction.pdf)** - Basic multi-factor scoring system for player matching
-- **[Advanced Player Prediction](docs/advanced_player_prediction.pdf)** - Name swapping logic and exact match override system
-- **[Complete End-to-End Workflow](docs/complete_end_to_end_workflow.pdf)** - Full system integration from upload to ESPN Fantasy
+- **[Color Detection Process](flowcharts/color_detection_process/color_detection_process.pdf)** - Two-tier color detection system with OCR-based sampling and K-means fallback
+- **[Image Preprocessing Pipeline](flowcharts/image_preprocessing_pipeline/image_preprocessing_pipeline.pdf)** - Dual OCR strategy with ROI-based and whole-cell competition
+- **[Player Name Prediction](flowcharts/player_name_prediction/player_name_prediction.pdf)** - Basic multi-factor scoring system for player matching
+- **[Advanced Player Prediction](flowcharts/advanced_player_prediction/advanced_player_prediction.pdf)** - Name swapping logic and exact match override system
+- **[Complete End-to-End Workflow](flowcharts/complete_end_to_end_workflow/complete_end_to_end_workflow.pdf)** - Full system integration from upload to ESPN Fantasy
 
 ## 📁 Project Structure
 
 ```
-draftboard_ocr/
+ai-draftboard-digitizer/
 ├── src/                    # Core OCR and ML modules
-├── templates/              # Flask web interface
-├── static/                 # Frontend assets (JS, CSS)
-├── flowcharts/             # System architecture documentation  
-├── docs/                   # Generated flowchart PDFs
-├── data/                   # Player database and sample images
-├── app.py                  # Main Flask application
-├── run_full_board.py       # CLI processing script
-└── requirements.txt        # Python dependencies
+├── scripts/                # Application entry points
+├── web/                    # Web interface (templates, static files)
+├── data/                   # Player database and core data
+├── examples/               # Sample images and analysis plots
+├── flowcharts/             # Technical documentation (md, html, pdf)
+├── outputs/                # Generated results (gitignored)
+├── app.py                  # Main entry point
+└── requirements.txt        # Dependencies
 ```
 
 ## 🛠️ Installation
@@ -114,7 +114,7 @@ draftboard_ocr/
 1. **Clone the repository:**
    ```bash
    git clone <repository-url>
-   cd draftboard_ocr
+   cd ai-draftboard-digitizer
    ```
 
 2. **Install dependencies:**
@@ -122,21 +122,30 @@ draftboard_ocr/
    pip install -r requirements.txt
    ```
 
-3. **Prepare your data:**
-   - Ensure `data/top500_playernames.csv` contains your player database
+3. **Verify setup:**
+   - Core player database is at `data/top500_playernames.csv`
+   - Sample images available in `examples/sample_data/`
+   - Analysis examples in `examples/analysis/`
    - (Draft board images are uploaded via web interface)
 
 ## 🎮 Usage
 
 ### Web Interface (Recommended)
 
-**Option 1: Direct launch (no auto-browser)**
+**Option 1: Quick launch (recommended)**
 ```bash
 python3 app.py
 ```
 
-**Option 2: Startup script (auto-opens browser)**
+**Option 2: Direct script execution**
 ```bash
+cd scripts
+python3 app.py
+```
+
+**Option 3: Startup script with auto-browser**
+```bash
+cd scripts
 python3 start_web.py
 ```
 
@@ -154,6 +163,7 @@ This will:
 
 ### Command Line Interface
 ```bash
+cd scripts
 python3 run_full_board.py
 ```
 
@@ -251,3 +261,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ---
 
 **Note**: This system is optimized for fantasy football draft boards with color-coded position stickers. For other formats, color calibration may be required.
+

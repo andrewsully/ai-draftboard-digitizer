@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete End-to-End Draft Board OCR Workflow</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+        }
+        .mermaid {
+            text-align: center;
+            background-color: white;
+        }
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+        }
+        .legend h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+        .results { background-color: #2196f3; }
+        .processing { background-color: #4caf50; }
+        .web-interface { background-color: #ff9800; }
+        .validation { background-color: #9c27b0; }
+        .finalization { background-color: #f44336; }
+        .decision { background-color: #795548; }
+        .espn-setup { background-color: #607d8b; }
+        .browser { background-color: #3f51b5; }
+        .navigation { background-color: #e91e63; }
+        .draft-processing { background-color: #009688; }
+        .preview { background-color: #4caf50; }
+        .upload { background-color: #ff5722; }
+        .validation-final { background-color: #673ab7; }
+        .final { background-color: #1976d2; }
+        .complete { background-color: #2e7d32; }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .feature-box {
+            background-color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-left: 4px solid #2196f3;
+        }
+        .feature-box h4 {
+            margin-top: 0;
+            color: #1976d2;
+        }
+        .espn-section {
+            background-color: #e8f5e9;
+            border-left-color: #4caf50;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .espn-section h3 {
+            color: #2e7d32;
+            margin-top: 0;
+        }
+        .upload-modes {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .mode-box {
+            background-color: white;
+            padding: 12px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .dry-run { border-left: 4px solid #4caf50; }
+        .live-upload { border-left: 4px solid #ff5722; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Complete End-to-End Draft Board OCR Workflow</h1>
+        
+        <div class="mermaid">
+flowchart TD
+    A["Final Player Results<br/>(from Advanced Prediction)"] --> B["Results Processing & Output Generation"]
+    
+    B --> B1["Organize Results by Grid Position"]
+    B1 --> B2["Generate Multiple Output Formats"]
+    
+    B2 --> B2a["CSV Export<br/>(board.csv)"]
+    B2 --> B2b["JSON Export<br/>(board.json)"]
+    B2 --> B2c["Row-Major Text<br/>(rows.txt)"]
+    B2 --> B2d["Column-Major Text<br/>(cols.txt)"]
+    B2 --> B2e["Low Confidence Review<br/>(review_low_confidence.csv)"]
+    B2 --> B2f["Visual Overlay Image<br/>(overlay.png)"]
+    
+    B2a --> C["Web Interface Display"]
+    B2b --> C
+    B2c --> C
+    B2d --> C
+    B2e --> C
+    B2f --> C
+    
+    C --> C1["Grid View Display<br/>(Draft board layout)"]
+    C --> C2["Team Roster View<br/>(Organized by teams)"]
+    C --> C3["Results Analysis<br/>(Statistics and confidence)"]
+    C --> C4["Download Options<br/>(All formats available)"]
+    
+    C1 --> D["User Review & Validation"]
+    C2 --> D
+    C3 --> D
+    C4 --> D
+    
+    D --> D1["Interactive Cell Editing<br/>(Manual corrections if needed)"]
+    D1 --> D2["Real-time Result Updates"]
+    D2 --> D3["Confidence Score Recalculation"]
+    D3 --> E["Results Finalization"]
+    
+    E --> F["ESPN Fantasy Upload Decision"]
+    F --> F1{"User wants to<br/>upload to ESPN?"}
+    
+    F1 -->|No| G1["Manual Export Only<br/>(Download files)"]
+    F1 -->|Yes| G2["ESPN Selenium Automation"]
+    
+    G2 --> G2a["Collect ESPN Credentials"]
+    G2a --> G2b["ESPN League URL"]
+    G2a --> G2c["Username & Password"]
+    G2a --> G2d["Dry Run Mode Selection"]
+    
+    G2d --> H["Selenium WebDriver Setup"]
+    H --> H1["Launch Chrome Browser<br/>(with appropriate options)"]
+    H1 --> H2["Navigate to ESPN Fantasy"]
+    H2 --> H3["Automated Login Process"]
+    
+    H3 --> H4["Login Validation"]
+    H4 --> H5{"Login successful?"}
+    H5 -->|No| H6["Login Error<br/>(Return error to user)"]
+    H5 -->|Yes| I["Navigate to Draft Page"]
+    
+    I --> I1["Find Draft/Team Management Section"]
+    I1 --> I2["Organize Results by Team<br/>(Convert grid to team rosters)"]
+    
+    I2 --> J["Draft Results Processing"]
+    J --> J1["Map Players to Teams<br/>(Based on draft position)"]
+    J1 --> J2["Handle Special Cases<br/>(DST teams, bye weeks)"]
+    J2 --> J3["Validate Team Rosters<br/>(Position requirements)"]
+    
+    J3 --> K["Upload Mode Decision"]
+    K --> K1{"Dry Run Mode<br/>enabled?"}
+    
+    K1 -->|Yes| K2["Preview Mode"]
+    K2 --> K2a["Display Draft Preview"]
+    K2a --> K2b["Show Team Rosters"]
+    K2b --> K2c["Validate Data Accuracy"]
+    K2c --> K2d["Generate Preview Report"]
+    K2d --> L1["Return Preview to User"]
+    
+    K1 -->|No| K3["Live Upload Mode"]
+    K3 --> K3a["Navigate to Team Pages"]
+    K3a --> K3b["For Each Team: Add Players"]
+    K3b --> K3c["Fill Player Search Fields"]
+    K3c --> K3d["Select Correct Players"]
+    K3d --> K3e["Set Draft Order/Positions"]
+    K3e --> K3f["Submit Team Changes"]
+    
+    K3f --> M["Upload Validation"]
+    M --> M1["Verify All Players Added"]
+    M1 --> M2["Check for Upload Errors"]
+    M2 --> M3{"Upload successful?"}
+    
+    M3 -->|No| M4["Upload Error Handling"]
+    M4 --> M4a["Log Error Details"]
+    M4a --> M4b["Attempt Retry (if applicable)"]
+    M4b --> M4c["Return Error Report"]
+    
+    M3 -->|Yes| M5["Upload Success"]
+    M5 --> M5a["Generate Success Report"]
+    M5a --> M5b["Log Upload Statistics"]
+    M5b --> M5c["Cleanup Browser Session"]
+    
+    L1 --> N["Final Results"]
+    M4c --> N
+    M5c --> N
+    G1 --> N
+    H6 --> N
+    
+    N --> N1["Complete Process Log"]
+    N --> N2["Success/Error Status"]
+    N --> N3["Generated Files Available"]
+    N --> N4["ESPN Upload Status (if attempted)"]
+    
+    N4 --> O["Workflow Complete"]
+    
+    style A fill:#2196f3,color:#fff
+    style B fill:#4caf50,color:#fff
+    style C fill:#ff9800,color:#fff
+    style D fill:#9c27b0,color:#fff
+    style E fill:#f44336,color:#fff
+    style F fill:#795548,color:#fff
+    style G2 fill:#607d8b,color:#fff
+    style H fill:#3f51b5,color:#fff
+    style I fill:#e91e63,color:#fff
+    style J fill:#009688,color:#fff
+    style K2 fill:#4caf50,color:#fff
+    style K3 fill:#ff5722,color:#fff
+    style M fill:#673ab7,color:#fff
+    style N fill:#1976d2,color:#fff
+    style O fill:#2e7d32,color:#fff
+        </div>
+
+        <div class="legend">
+            <h3>Complete Workflow Stages</h3>
+            <div class="legend-item">
+                <div class="legend-color results"></div>
+                <strong>Results Input:</strong> Final player results from advanced prediction system
+            </div>
+            <div class="legend-item">
+                <div class="legend-color processing"></div>
+                <strong>Output Generation:</strong> Multiple file formats and visual overlays
+            </div>
+            <div class="legend-item">
+                <div class="legend-color web-interface"></div>
+                <strong>Web Interface:</strong> Interactive display and user interaction
+            </div>
+            <div class="legend-item">
+                <div class="legend-color validation"></div>
+                <strong>User Validation:</strong> Review, editing, and manual corrections
+            </div>
+            <div class="legend-item">
+                <div class="legend-color finalization"></div>
+                <strong>Results Finalization:</strong> Data validation and export preparation
+            </div>
+            <div class="legend-item">
+                <div class="legend-color decision"></div>
+                <strong>Upload Decision:</strong> Manual export vs ESPN automation
+            </div>
+            <div class="legend-item">
+                <div class="legend-color espn-setup"></div>
+                <strong>ESPN Setup:</strong> Credentials and automation configuration
+            </div>
+            <div class="legend-item">
+                <div class="legend-color browser"></div>
+                <strong>Browser Automation:</strong> Selenium WebDriver and ESPN login
+            </div>
+            <div class="legend-item">
+                <div class="legend-color navigation"></div>
+                <strong>Site Navigation:</strong> ESPN interface navigation and page access
+            </div>
+            <div class="legend-item">
+                <div class="legend-color draft-processing"></div>
+                <strong>Draft Processing:</strong> Team mapping and roster organization
+            </div>
+            <div class="legend-item">
+                <div class="legend-color preview"></div>
+                <strong>Preview Mode:</strong> Safe testing and validation (dry run)
+            </div>
+            <div class="legend-item">
+                <div class="legend-color upload"></div>
+                <strong>Live Upload:</strong> Actual ESPN data entry and submission
+            </div>
+            <div class="legend-item">
+                <div class="legend-color validation-final"></div>
+                <strong>Upload Validation:</strong> Success verification and error handling
+            </div>
+            <div class="legend-item">
+                <div class="legend-color final"></div>
+                <strong>Final Results:</strong> Process completion and status reporting
+            </div>
+            <div class="legend-item">
+                <div class="legend-color complete"></div>
+                <strong>Workflow Complete:</strong> End-to-end process finished
+            </div>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-box">
+                <h4>📊 Comprehensive Output Generation</h4>
+                <ul>
+                    <li><strong>Multiple Formats:</strong> CSV, JSON, text files</li>
+                    <li><strong>Visual Validation:</strong> Annotated overlay images</li>
+                    <li><strong>Quality Control:</strong> Low confidence review files</li>
+                    <li><strong>Flexible Export:</strong> Choose formats based on use case</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>🌐 Interactive Web Interface</h4>
+                <ul>
+                    <li><strong>Multiple Views:</strong> Grid, team rosters, analysis</li>
+                    <li><strong>Real-time Editing:</strong> Click to modify assignments</li>
+                    <li><strong>Instant Feedback:</strong> Immediate result updates</li>
+                    <li><strong>Download Ready:</strong> All formats instantly available</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>🔍 User Validation & Correction</h4>
+                <ul>
+                    <li><strong>Cell-level Editing:</strong> Modify any player assignment</li>
+                    <li><strong>Confidence Tracking:</strong> Visual uncertainty indicators</li>
+                    <li><strong>Real-time Updates:</strong> Immediate recalculation</li>
+                    <li><strong>Quality Assurance:</strong> Manual review capabilities</li>
+                </ul>
+            </div>
+            
+            <div class="feature-box">
+                <h4>⚙️ Advanced ESPN Integration</h4>
+                <ul>
+                    <li><strong>Browser Automation:</strong> Selenium WebDriver</li>
+                    <li><strong>Secure Login:</strong> Automated ESPN authentication</li>
+                    <li><strong>Smart Navigation:</strong> Find draft pages automatically</li>
+                    <li><strong>Error Recovery:</strong> Comprehensive error handling</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="espn-section">
+            <h3>🏈 ESPN Fantasy Integration Features</h3>
+            
+            <div class="upload-modes">
+                <div class="mode-box dry-run">
+                    <h4>🔍 Dry Run Mode (Default)</h4>
+                    <ul>
+                        <li>Safe preview without making changes</li>
+                        <li>Validate data accuracy before upload</li>
+                        <li>Generate detailed preview reports</li>
+                        <li>Test ESPN connectivity and permissions</li>
+                    </ul>
+                </div>
+                
+                <div class="mode-box live-upload">
+                    <h4>🚀 Live Upload Mode</h4>
+                    <ul>
+                        <li>Automated ESPN data entry</li>
+                        <li>Team roster construction</li>
+                        <li>Draft order and position setting</li>
+                        <li>Complete league population</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <h4>Key ESPN Automation Capabilities:</h4>
+            <ul>
+                <li><strong>Team Mapping:</strong> Convert grid positions to team rosters</li>
+                <li><strong>Player Search:</strong> Automated player lookup and selection</li>
+                <li><strong>Special Handling:</strong> DST teams, bye weeks, position requirements</li>
+                <li><strong>Validation:</strong> Verify all players added correctly</li>
+                <li><strong>Error Recovery:</strong> Handle failures gracefully with detailed logging</li>
+                <li><strong>Session Management:</strong> Proper cleanup and resource management</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 30px; padding: 15px; background-color: #e3f2fd; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #1565c0;">🎯 Complete System Benefits:</h3>
+            <ul>
+                <li><strong>End-to-End Automation:</strong> From image upload to ESPN league population</li>
+                <li><strong>Multiple Export Options:</strong> Manual files or automated upload</li>
+                <li><strong>Quality Assurance:</strong> Interactive review and correction capabilities</li>
+                <li><strong>Safe Testing:</strong> Dry run mode prevents accidental changes</li>
+                <li><strong>Comprehensive Logging:</strong> Complete audit trail of all operations</li>
+                <li><strong>Error Recovery:</strong> Graceful handling of failures at every stage</li>
+                <li><strong>User Control:</strong> Manual override capabilities throughout</li>
+                <li><strong>Professional Output:</strong> Publication-ready results and reports</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background-color: #f3e5f5; border-radius: 5px;">
+            <h3 style="margin-top: 0; color: #7b1fa2;">🔗 Integration Points:</h3>
+            <p>This workflow connects to your previous flowcharts:</p>
+            <ul>
+                <li><strong>Input:</strong> Receives results from "Advanced Player Prediction" flowchart</li>
+                <li><strong>Color Data:</strong> Uses color profiles from "Color Detection Process"</li>
+                <li><strong>OCR Data:</strong> Incorporates results from "Image Preprocessing Pipeline"</li>
+                <li><strong>Player Data:</strong> Utilizes predictions from "Player Name Prediction"</li>
+            </ul>
+            <p><strong>Result:</strong> Complete end-to-end system from raw image to populated ESPN fantasy league!</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

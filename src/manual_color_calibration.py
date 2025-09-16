@@ -17,7 +17,7 @@ class ColorProfile:
 class ManualColorCalibrator:
     """Manual color calibration using example images."""
     
-    def __init__(self, examples_dir: str = "data/positional_color_examples"):
+    def __init__(self, examples_dir: str = "examples/sample_data/positional_color_examples"):
         self.examples_dir = examples_dir
         self.profiles = {}
         self.color_samples = {}

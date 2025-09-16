@@ -3,7 +3,7 @@ import re
 from dataclasses import dataclass
 from rapidfuzz import fuzz
 from typing import List, Tuple, Optional
-from .ocr_cell import normalize_team, clean_pos_text
+from ocr_cell import normalize_team, clean_pos_text
 import math  # at the top with your other imports
 
 
