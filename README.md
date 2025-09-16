@@ -1,4 +1,4 @@
-# Fantasy Football Draft Board OCR
+# AI Draft Board Digitizer: Fantasy Football Photo-to-ESPN Automation
 
 A sophisticated OCR (Optical Character Recognition) system for extracting player information from fantasy football draft boards using computer vision, color-based position detection, and intelligent player matching.
 
