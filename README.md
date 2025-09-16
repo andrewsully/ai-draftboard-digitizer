@@ -9,7 +9,7 @@ https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
 
 ## 🚀 Features
 
-- **Two-Tier Color Detection**: Smart OCR-based detection with K-means clustering fallback
+- **Color-Based Position Detection**: Reliable position identification from sticker colors overcomes poor text quality
 - **Dual OCR Strategy**: ROI-based and whole-cell approaches compete for best results
 - **Advanced Player Prediction**: Multi-factor scoring with name swapping and exact match override
 - **Intelligent Player Matching**: 7-component scoring system with draft likelihood modeling
@@ -22,20 +22,27 @@ https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
 
 ## 🎯 How It Works
 
-### 1. **Two-Tier Color Detection System**
-**Tier 1 - Smart OCR-based Detection (Preferred):**
-- Performs OCR on all cells to find position text and player names
-- Collects HSV color samples from cells containing recognized positions
-- Calculates color ranges using percentiles and padding
-- High confidence (1.0) when ≥3 positions detected
+### 1. **Color Profile Configuration**
+**Why Color Detection is Critical:**
+Draft board stickers often have inconsistent formatting, poor photo quality, and hard-to-read text. The system uses **color as a primary predictor** to reliably identify player positions, ensuring generalizability across diverse sticker formats. By knowing the position with high certainty from color analysis, the system can effectively guide OCR and prediction processes for the remaining sticker content.
 
-**Tier 2 - K-means Clustering Fallback:**
-- Applies K-means clustering with 6 clusters to entire image
-- Filters pixels by saturation/value to remove background
+**Configuration Methods:**
+The system requires color profiles for each position (QB, RB, WR, TE, K, DST) and can be configured through:
+
+**Manual Color Selection (Primary Method):**
+- User clicks directly on colored stickers in the web interface
+- System captures exact HSV values from selected pixels
+- Provides precise control over color ranges
+
+**Automatic Detection (Alternative Method):**
+- **Tier 1**: OCR-based detection finds position text and samples colors
+- **Tier 2**: K-means clustering fallback when insufficient positions detected
 - Assigns clusters to positions: WR→RB→QB→TE→DST→K
 - Lower confidence (0.5) fallback method
 
 ### 2. **Dual OCR Strategy with Competition**
+With position reliably identified through color analysis, the system can focus OCR efforts on extracting player names from often poor-quality sticker text:
+
 **ROI-Based Approach:**
 - Divides each cell into 5 targeted regions based on research of common draft card formats
 - **Last Name** (center): Prioritized as most consistently placed, formatted, and readable
@@ -52,21 +59,30 @@ https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
 
 **Competition System:** Both approaches compete, highest match score wins
 
-### 3. **Advanced Player Prediction with 7-Component Scoring**
-- **Last Name (40 pts)**: Fuzzy string matching with token_set_ratio
-- **First Name (15 pts)**: Additional fuzzy validation when available
-- **Team Match (15 pts)**: Exact team abbreviation matching
-- **Bye Week (10 pts)**: Exact bye week number validation
-- **Color Position (15 pts)**: Position from color analysis
-- **OCR Position (10 pts)**: Position from text recognition
-- **Draft Likelihood (20 pts)**: Gaussian probability model using ADP rankings
+### 3. **Smart Player Prediction Workflow**
+**The Foundation: 500-Player Database**
+The system starts with a comprehensive database of the top 500 fantasy football players, ranked by Average Draft Position (ADP) and containing all relevant draft information (name, team, position, bye week).
+
+**Step-by-Step Filtering Process:**
+1. **Position-Based Filtering (67-94% reduction)**: Uses color-detected position to filter the 500-player pool down to only candidates of the correct position (e.g., ~32-172 players depending on position)
+2. **Exclude Already Drafted**: Removes players already assigned to other cells
+3. **Multi-Factor Scoring**: Applies 7-component scoring system to remaining candidates:
+   - **Last Name (40 pts)**: Fuzzy string matching with token_set_ratio
+   - **First Name (15 pts)**: Additional fuzzy validation when available
+   - **Team Match (15 pts)**: Exact team abbreviation matching
+   - **Bye Week (10 pts)**: Exact bye week number validation
+   - **Color Position (15 pts)**: Confirmation that detected position matches database
+   - **OCR Position (10 pts)**: Position from text recognition
+   - **Draft Likelihood (20 pts)**: Gaussian probability model using ADP rankings
+4. **Best Match Selection**: Highest-scoring available player wins
 
 ### 4. **Exact Match Override System**
 **Player Stealing Logic:**
-- Perfect last name matches can override lower-confidence assignments
-- ✅ **Can steal**: Players assigned via standard (fuzzy) matching
+When a cell contains a perfect OCR match for a player's last name, the system can "steal" that player from a previous fuzzy assignment:
+- ✅ **Can steal**: Players assigned via standard fuzzy matching (lower confidence)
 - ❌ **Cannot steal**: Players assigned via exact matching (locked)
-- Displaced cells get full re-reconciliation without stolen player
+- **Re-reconciliation**: Displaced cells get completely re-processed without the stolen player
+- **Override Priority**: Exact matches take precedence even if the player was already "drafted"
 
 ### 5. **Draft Position Intelligence**
 - **Snake Draft Logic**: Converts grid position to draft pick number
@@ -190,6 +206,8 @@ This will:
 - **Team rosters**: Organized by fantasy teams for easy review
 
 ### Color Calibration
+**Critical Foundation:** Color-based position detection is essential because draft board stickers often have inconsistent text formatting and poor photo quality. By establishing reliable color profiles, the system can confidently identify each player's position, dramatically reducing the search space (67-94% fewer candidates) and enabling accurate player predictions even with hard-to-read sticker text.
+
 The web interface provides two color calibration methods:
 
 **Manual Color Selection:**
