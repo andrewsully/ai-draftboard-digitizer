@@ -98,43 +98,15 @@ Comprehensive visual documentation of the system's technical processes:
 
 ```
 draftboard_ocr/
-├── src/                          # Core modules
-│   ├── preprocess.py             # Board-level preprocessing (CLAHE, bilateral filtering)
-│   ├── grid.py                   # Precise cell boundary extraction (16×10 default)
-│   ├── ocr_cell.py               # Dual OCR strategy (ROI + whole-cell competition)
-│   ├── reconcile.py              # Advanced player prediction with exact match override
-│   ├── emit.py                   # Multi-format output generation and visual overlays
-│   ├── espn_uploader.py          # Selenium-based ESPN Fantasy Football automation
-│   ├── color_calibration.py      # Color profile framework and validation
-│   ├── manual_color_calibration.py # Manual calibration with K-means visualization
-│   └── color_visualization.py    # Color spectrum analysis and position overlays
-├── templates/                    # Web interface templates
-│   └── index.html                # Main web interface
-├── static/                       # Web assets
-│   ├── script.js                 # Frontend JavaScript
-│   ├── style.css                 # Frontend CSS
-│   └── uploads/                  # Temporary web uploads
-├── flowcharts/                   # System architecture documentation
-│   ├── color_detection_process.md        # Two-tier color detection flowchart
-│   ├── image_preprocessing_pipeline.md   # Dual OCR competition system
-│   ├── player_name_prediction.md         # Multi-factor scoring system
-│   ├── advanced_player_prediction.md     # Name swapping & exact match override
-│   ├── complete_end_to_end_workflow.md   # Full system integration
-│   └── *.html                            # Interactive visual flowcharts
-├── data/                         # Input data
-│   ├── draftboard.png            # Draft board image
-│   ├── formattemplate.png        # Format reference image
-│   └── top500_playernames.csv    # Player database with ADP rankings
-├── uploads/                      # User uploaded images (web interface)
-├── web_output/                   # Web interface processing output
-├── full_board_out/               # CLI processing output
-├── app.py                        # Main Flask web application with ESPN integration
-├── start_web.py                  # Web startup script (auto-opens browser)
-├── run_full_board.py             # CLI execution script
-├── ProjectPlan.txt               # Detailed project documentation
-├── README.md                     # This file
-├── requirements.txt              # Python dependencies (includes Selenium)
-└── .gitignore                    # Git ignore patterns
+├── src/                    # Core OCR and ML modules
+├── templates/              # Flask web interface
+├── static/                 # Frontend assets (JS, CSS)
+├── flowcharts/             # System architecture documentation  
+├── docs/                   # Generated flowchart PDFs
+├── data/                   # Player database and sample images
+├── app.py                  # Main Flask application
+├── run_full_board.py       # CLI processing script
+└── requirements.txt        # Python dependencies
 ```
 
 ## 🛠️ Installation
