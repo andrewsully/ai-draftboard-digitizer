@@ -1,6 +1,6 @@
 # Fantasy Football Draft Board OCR
 
-A sophisticated OCR system for extracting player information from fantasy football draft boards using computer vision, color-based position detection, and intelligent player matching.
+A sophisticated OCR (Optical Character Recognition) system for extracting player information from fantasy football draft boards using computer vision, color-based position detection, and intelligent player matching.
 
 ## 🎬 Live Demo
 https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
@@ -9,25 +9,20 @@ https://github.com/user-attachments/assets/bf02c106-26f8-48a8-92e9-3343beee9458
 
 ## 🚀 Features
 
-- **Color-Based Position Detection**: Reliable position identification from sticker colors overcomes poor text quality
-- **Dual OCR Strategy**: ROI-based and whole-cell approaches compete for best results
-- **Advanced Player Prediction**: Multi-factor scoring with name swapping and exact match override
-- **Intelligent Player Matching**: 7-component scoring system with draft likelihood modeling
-- **Exact Match Override**: Perfect name matches can steal players from fuzzy assignments
-- **Name Swapping Logic**: Automatically handles first/last name OCR confusion
-- **ESPN Fantasy Integration**: Selenium-based automated league population
-- **Interactive Web Interface**: Real-time editing, multiple views, and validation
-- **Multiple Output Formats**: CSV, JSON, visual overlays, and team rosters
-- **High Accuracy**: Achieves 100% success rate with sophisticated reconciliation
+- **📸 Photo to Draft Data**: Transform any draft board photo into complete digital draft results with high accuracy
+- **🌍 Universal Compatibility**: Works with all draft board manufacturers using color-based position detection and advanced multi-level Optical Character Recognition (OCR) processing.
+- **🧠 Intelligent Player Matching**: Advanced AI reconciliation using 2025 fantasy rankings and multi-factor scoring
+- **⚡ Minimal Setup Required**: From image upload to ESPN Fantasy league population with minimal configuration
 
 ## 🎯 How It Works
 
+The system transforms draft board photos into ESPN Fantasy leagues through four main stages: color calibration, dual OCR processing, intelligent player matching, and automated league population.
+
 ### 1. **Color Profile Configuration**
 **Why Color Detection is Critical:**
-Draft board stickers often have inconsistent formatting, poor photo quality, and hard-to-read text. The system uses **color as a primary predictor** to reliably identify player positions, ensuring generalizability across diverse sticker formats. By knowing the position with high certainty from color analysis, the system can effectively guide OCR and prediction processes for the remaining sticker content.
+All draft board manufacturers use color-to-position mapping, but text formatting, orientation, and quality vary significantly. This system leverages that universal standard for reliable position identification across any manufacturer format.
 
 **Configuration Methods:**
-The system requires color profiles for each position (QB, RB, WR, TE, K, DST) and can be configured through:
 
 **Manual Color Selection (Primary Method):**
 - User clicks directly on colored stickers in the web interface
@@ -43,7 +38,7 @@ The system requires color profiles for each position (QB, RB, WR, TE, K, DST) an
 ### 2. **Dual OCR Strategy with Competition**
 With position reliably identified through color analysis, the system can focus OCR efforts on extracting player names from often poor-quality sticker text:
 
-**ROI-Based Approach:**
+**ROI (Region of Interest)-Based Approach:**
 - Divides each cell into 5 targeted regions based on research of common draft card formats
 - **Last Name** (center): Prioritized as most consistently placed, formatted, and readable
 - **Position** (top-left), **Bye** (top-right), **Team** (bottom-left), **First Name** (bottom-right)
@@ -51,16 +46,16 @@ With position reliably identified through color analysis, the system can focus O
 - Position-specific whitelists optimize for expected content
 
 **Whole-Cell Approach:**
-- Designed for **generalizability** across diverse card formats and styles
+- Designed for **universal compatibility** across all manufacturer formats and styles
 - Processes entire cell as single unit with PSM=6
 - Intelligent parsing using regex and stopword filtering  
 - **Name Swapping Logic**: Tests first/last name arrangements automatically
-- Ensures system works with any card format, not just common layouts
+- Handles varying text orientations, inclusions, and layouts from different manufacturers
 
 **Competition System:** Both approaches compete, highest match score wins
 
 ### 3. **Smart Player Prediction Workflow**
-**The Foundation: 500-Player Database**
+**The Foundation: 500-Player Database** <br>
 The system starts with a comprehensive database of the top 500 fantasy football players, ranked by Average Draft Position (ADP) and containing all relevant draft information (name, team, position, bye week).
 
 **Step-by-Step Filtering Process:**
@@ -86,9 +81,18 @@ When a cell contains a perfect OCR match for a player's last name, the system ca
 
 ### 5. **Draft Position Intelligence**
 - **Snake Draft Logic**: Converts grid position to draft pick number
-- **Variable Sigma Model**: σ = 2.0 + 0.1 × player_rank (uncertainty grows with rank)
 - **ADP Integration**: Uses Average Draft Position for realistic predictions
 - **Context Awareness**: Early picks more predictable than late picks
+
+## 📊 System Architecture Flowcharts
+
+Comprehensive visual documentation of the system's technical processes:
+
+- **[Color Detection Process](docs/color_detection_process.pdf)** - Two-tier color detection system with OCR-based sampling and K-means fallback
+- **[Image Preprocessing Pipeline](docs/image_preprocessing_pipeline.pdf)** - Dual OCR strategy with ROI-based and whole-cell competition
+- **[Player Name Prediction](docs/player_name_prediction.pdf)** - Basic multi-factor scoring system for player matching
+- **[Advanced Player Prediction](docs/advanced_player_prediction.pdf)** - Name swapping logic and exact match override system
+- **[Complete End-to-End Workflow](docs/complete_end_to_end_workflow.pdf)** - Full system integration from upload to ESPN Fantasy
 
 ## 📁 Project Structure
 
@@ -206,9 +210,9 @@ This will:
 - **Team rosters**: Organized by fantasy teams for easy review
 
 ### Color Calibration
-**Critical Foundation:** Color-based position detection is essential because draft board stickers often have inconsistent text formatting and poor photo quality. By establishing reliable color profiles, the system can confidently identify each player's position, dramatically reducing the search space (67-94% fewer candidates) and enabling accurate player predictions even with hard-to-read sticker text.
+**Critical Foundation:** All draft board manufacturers use color-to-position mapping, but text formatting varies significantly. This system leverages that universal standard to work across any manufacturer while dramatically reducing the search space (67-94% fewer candidates).
 
-The web interface provides two color calibration methods:
+Two calibration methods:
 
 **Manual Color Selection:**
 1. **Upload and crop** your draft board image
@@ -235,53 +239,23 @@ The web interface provides two color calibration methods:
 - **Name Swapping**: Handles 95% of first/last name OCR confusion
 - **Processing Time**: ~2 minutes for full board including ESPN upload
 
-### Advanced Features Impact
+### Key Performance Metrics
 - **Exact Match Override**: Prevents 90% of misassignments from fuzzy matches
-- **Player Stealing**: Intelligently reassigns players for optimal accuracy
-- **Draft Likelihood**: ADP integration improves position validation by 30%
 - **Color Filtering**: 67-94% search space reduction maintains high precision
 - **ESPN Integration**: 100% success rate with dry-run validation
 
 ## 🔧 Configuration
 
-### Advanced Scoring Thresholds
+### Key Thresholds
 - **Confidence Threshold**: 45.0 points (out of 125 max) for database vs OCR decision
 - **Exact Match Override**: Perfect name matches bypass normal thresholds
-- **Draft Likelihood**: Variable sigma model: σ = 2.0 + 0.1 × player_rank
 
 ### Dual OCR Competition
 - **ROI Approach**: PSM=7 with position-specific whitelists ('QBWRTEDSTK', 'BYE 0123456789')
 - **Whole-Cell Approach**: PSM=6 with intelligent token parsing and name swapping
 - **Competition**: Highest match score wins, ROI preferred on ties
 
-### Two-Tier Color Detection
-- **Tier 1 Threshold**: ≥3 positions detected for high confidence (1.0)
-- **Tier 2 Fallback**: K-means clustering with lower confidence (0.5)
-- **Manual Calibration**: 5th-95th percentiles with proportional padding
 
-## 🎨 Advanced Color Detection System
-
-### Two-Tier Intelligence
-**Tier 1 - Smart OCR-based Detection:**
-- Performs OCR on all cells to identify position text and player names
-- Collects HSV samples from cells containing recognized positions (QB, RB, etc.)
-- Calculates statistical color ranges using percentiles with intelligent padding
-- Achieves high confidence (1.0) when ≥3 positions successfully detected
-
-**Tier 2 - K-means Clustering Fallback:**
-- Applied when Tier 1 fails to detect sufficient positions
-- Filters pixels by saturation/value thresholds to remove background
-- Performs 6-cluster K-means on entire image
-- Assigns clusters to positions by size: WR→RB→QB→TE→DST→K
-- Lower confidence (0.5) but ensures system always works
-
-### Web-Based Color Calibration
-- **Direct Pixel Sampling**: Click-to-select exact colors from your image
-- **Position-Specific Tolerances**: Tailored HSV ranges for each position type
-- **OCR-Based Auto-Detection**: Intelligent sampling from recognized position text
-- **Statistical Color Analysis**: Percentile-based ranges with proportional padding
-- **K-means Fallback**: 6-cluster analysis when OCR detection insufficient
-- **Real-time Preview**: Immediate visual feedback of selected colors
 
 ## 🤝 Contributing
 
